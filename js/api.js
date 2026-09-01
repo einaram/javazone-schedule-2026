@@ -1,24 +1,62 @@
 /**
- * Fetch JavaZone sessions from SleepingPill API with fallbacks.
+ * Fetch JavaZone sessions from SleepingPill API with fallbacks and browser caching.
  */
+const CACHE_KEY = 'javazone_2026_all_sessions_cache';
+
 export async function fetchSessions() {
-  const endpoints = [
+  const remoteEndpoints = [
     'https://sleepingpill.javazone.no/public/allSessions/javazone_2026',
-    'https://sleepingpill.javazone.no/public/allSessions/javazone_2025',
-    './data/sessions-fallback.json'
+    'https://sleepingpill.javazone.no/public/allSessions/javazone_2025'
   ];
 
-  for (const url of endpoints) {
+  for (const url of remoteEndpoints) {
     try {
-      const response = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
       if (!response.ok) continue;
       const data = await response.json();
       if (data && Array.isArray(data.sessions) && data.sessions.length > 0) {
-        return normalizeSessions(data.sessions);
+        const normalized = normalizeSessions(data.sessions);
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(normalized));
+        } catch (e) {
+          console.warn('Failed to save sessions to localStorage:', e);
+        }
+        return normalized;
       }
     } catch (err) {
       console.warn(`Failed to fetch from ${url}:`, err);
     }
+  }
+
+  // If remote endpoints failed or timed out, try loading from browser localStorage cache
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        console.log('Serving session data from browser localStorage cache');
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading session cache from localStorage:', e);
+  }
+
+  // Final fallback to static json file
+  try {
+    const response = await fetch('./data/sessions-fallback.json');
+    if (response.ok) {
+      const data = await response.json();
+      if (data && Array.isArray(data.sessions) && data.sessions.length > 0) {
+        return normalizeSessions(data.sessions);
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to fetch static fallback JSON:', err);
   }
 
   // Last resort fallback empty array if fetch fails entirely
