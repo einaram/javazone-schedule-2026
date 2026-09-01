@@ -5,8 +5,7 @@ const CACHE_KEY = 'javazone_2026_all_sessions_cache';
 
 export async function fetchSessions() {
   const remoteEndpoints = [
-    'https://sleepingpill.javazone.no/public/allSessions/javazone_2026',
-    'https://sleepingpill.javazone.no/public/allSessions/javazone_2025'
+    'https://sleepingpill.javazone.no/public/allSessions/javazone_2026'
   ];
 
   for (const url of remoteEndpoints) {
