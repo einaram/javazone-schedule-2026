@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JavaZone Program Schedule</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>">
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <a href="#" class="brand">
+        <div class="brand-logo">JZ</div>
+        <div class="brand-title">JavaZone <span>2026</span></div>
+      </a>
+      <div class="nav-controls">
+        <button id="tab-all" class="tab-btn active">All Sessions</button>
+        <button id="tab-my" class="tab-btn">My Schedule <span id="star-count">(0)</span></button>
+        <button id="share-btn" class="share-btn">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+          Share Schedule
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="filter-section">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search sessions, topics, or speakers..." />
+      </div>
+
+      <div class="filter-groups">
+        <div class="filter-group">
+          <span class="filter-label">Day:</span>
+          <div class="chip-group" id="day-chips">
+            <div class="chip active" data-day="all">All Days</div>
+            <div class="chip" data-day="Tue">Tue, Sep 1</div>
+            <div class="chip" data-day="Wed">Wed, Sep 2</div>
+            <div class="chip" data-day="Thu">Thu, Sep 3</div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Format:</span>
+          <div class="chip-group" id="format-chips">
+            <div class="chip active" data-format="all">All</div>
+            <div class="chip" data-format="presentation">Presentation</div>
+            <div class="chip" data-format="workshop">Workshop</div>
+            <div class="chip" data-format="lightning-talk">Lightning</div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Lang:</span>
+          <div class="chip-group" id="lang-chips">
+            <div class="chip active" data-lang="all">All</div>
+            <div class="chip" data-lang="en">EN</div>
+            <div class="chip" data-lang="no">NO</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="schedule-container"></div>
+  </main>
+
+  <div id="modal-overlay" class="modal-overlay">
+    <div class="modal-content">
+      <button id="modal-close" class="modal-close">&times;</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Schedule link copied to clipboard!</div>
+
+  <footer>
+    Made for JavaZone attendees • Shareable schedule powered by URL parameters
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
