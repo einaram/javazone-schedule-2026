@@ -10,7 +10,8 @@ class App {
       search: '',
       day: 'all',
       format: 'all',
-      lang: 'all'
+      lang: 'all',
+      hideFinished: false
     };
 
     this.initDOM();
@@ -27,6 +28,7 @@ class App {
     this.dayChips = document.getElementById('day-chips');
     this.formatChips = document.getElementById('format-chips');
     this.langChips = document.getElementById('lang-chips');
+    this.hideFinishedCheckbox = document.getElementById('hide-finished-checkbox');
     this.container = document.getElementById('schedule-container');
     this.modalOverlay = document.getElementById('modal-overlay');
     this.modalClose = document.getElementById('modal-close');
@@ -52,6 +54,14 @@ class App {
     this.bindChips(this.dayChips, 'day');
     this.bindChips(this.formatChips, 'format');
     this.bindChips(this.langChips, 'lang');
+
+    // Hide finished checkbox
+    if (this.hideFinishedCheckbox) {
+      this.hideFinishedCheckbox.addEventListener('change', (e) => {
+        this.filters.hideFinished = e.target.checked;
+        this.render();
+      });
+    }
 
     // Modal close
     this.modalClose.addEventListener('click', () => this.closeModal());
@@ -120,6 +130,13 @@ class App {
         return false;
       }
 
+      // Hide finished sessions filter
+      if (this.filters.hideFinished && s.endMs) {
+        if (s.endMs < Date.now()) {
+          return false;
+        }
+      }
+
       // Search text
       if (this.filters.search) {
         const q = this.filters.search;
@@ -170,8 +187,15 @@ class App {
 
     let html = '';
     const dayNames = { Tue: 'Tuesday, Sep 1', Wed: 'Wednesday, Sep 2', Thu: 'Thursday, Sep 3' };
+    const dayOrder = ['Tue', 'Wed', 'Thu'];
 
-    Object.keys(grouped).forEach((dayKey) => {
+    // Sort days explicitly so Tuesday comes first
+    const sortedDays = dayOrder.filter((d) => grouped[d]);
+    Object.keys(grouped).forEach((d) => {
+      if (!sortedDays.includes(d)) sortedDays.push(d);
+    });
+
+    sortedDays.forEach((dayKey) => {
       html += `<h2 style="margin: 2rem 0 1rem 0; color: var(--accent-color); font-size: 1.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.5rem;">${dayNames[dayKey] || dayKey}</h2>`;
 
       Object.keys(grouped[dayKey]).sort().forEach((timeKey) => {

@@ -80,11 +80,14 @@ function normalizeSessions(sessions) {
 
     let dateDay = 'Tue'; // Default fallback day
     let timeFormatted = '09:00';
+    let startMs = 0;
+    let endMs = 0;
 
     if (startTime) {
       try {
         const d = new Date(startTime);
         if (!isNaN(d.getTime())) {
+          startMs = d.getTime();
           const dayNum = d.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu...
           if (dayNum === 2) dateDay = 'Tue';
           else if (dayNum === 3) dateDay = 'Wed';
@@ -96,6 +99,20 @@ function normalizeSessions(sessions) {
           timeFormatted = `${hh}:${mm}`;
         }
       } catch (e) {}
+    }
+
+    if (endTime) {
+      try {
+        const d = new Date(endTime);
+        if (!isNaN(d.getTime())) {
+          endMs = d.getTime();
+        }
+      } catch (e) {}
+    }
+
+    if (!endMs && startMs) {
+      const durationMins = parseInt(length, 10) || 45;
+      endMs = startMs + durationMins * 60 * 1000;
     }
 
     const speakers = Array.isArray(s.speakers)
@@ -112,6 +129,8 @@ function normalizeSessions(sessions) {
       length,
       startTime,
       endTime,
+      startMs,
+      endMs,
       dateDay,
       timeFormatted,
       speakers,
