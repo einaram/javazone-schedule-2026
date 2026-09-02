@@ -288,6 +288,7 @@ class App {
     ];
 
     const PX_PER_MIN = 3.2;
+    const TOP_OFFSET = 12;
     let html = '';
 
     sortedDays.forEach((dayKey) => {
@@ -303,6 +304,7 @@ class App {
 
       let minMin = 24 * 60;
       let maxMin = 0;
+      const startMinsSet = new Set();
 
       daySessions.forEach((s) => {
         const startMin = this.getMinFromTime(s);
@@ -310,32 +312,33 @@ class App {
         const endMin = startMin + durMin;
         if (startMin < minMin) minMin = startMin;
         if (endMin > maxMin) maxMin = endMin;
+        startMinsSet.add(startMin);
       });
 
       if (minMin >= maxMin) {
         minMin = 540;
         maxMin = 1080;
+        startMinsSet.add(540);
       }
 
-      const startHour = Math.floor(minMin / 60);
-      const endHour = Math.ceil(maxMin / 60) + 1;
-      const gridStartMin = startHour * 60;
-      const gridEndMin = endHour * 60;
-      const totalMins = gridEndMin - gridStartMin;
-      const totalHeight = totalMins * PX_PER_MIN;
+      const gridStartMin = minMin;
+      const totalMins = maxMin - gridStartMin;
+      const totalHeight = totalMins * PX_PER_MIN + TOP_OFFSET + 30;
+
+      const sortedStartMins = Array.from(startMinsSet).sort((a, b) => a - b);
 
       let timeMarkersHtml = '';
       let gridLinesHtml = '';
 
-      for (let hour = startHour; hour <= endHour; hour++) {
-        const mins = hour * 60;
-        const topPx = (mins - gridStartMin) * PX_PER_MIN;
-        const hh = String(hour).padStart(2, '0');
-        const label = `${hh}:00`;
+      sortedStartMins.forEach((mins) => {
+        const topPx = (mins - gridStartMin) * PX_PER_MIN + TOP_OFFSET;
+        const hh = String(Math.floor(mins / 60)).padStart(2, '0');
+        const mm = String(mins % 60).padStart(2, '0');
+        const label = `${hh}:${mm}`;
 
         timeMarkersHtml += `<div class="time-marker" style="top: ${topPx}px;">${label}</div>`;
         gridLinesHtml += `<div class="time-grid-line" style="top: ${topPx}px;"></div>`;
-      }
+      });
 
       html += `
         <div class="matrix-day-section">
@@ -354,7 +357,7 @@ class App {
                 return `
                   <div class="matrix-room-col" style="height: ${totalHeight}px;">
                     ${gridLinesHtml}
-                    ${roomSessions.map((s) => this.renderMatrixCard(s, gridStartMin, PX_PER_MIN)).join('')}
+                    ${roomSessions.map((s) => this.renderMatrixCard(s, gridStartMin, PX_PER_MIN, TOP_OFFSET)).join('')}
                   </div>
                 `;
               }).join('')}
@@ -367,10 +370,10 @@ class App {
     this.container.innerHTML = html;
   }
 
-  renderMatrixCard(s, gridStartMin, PX_PER_MIN) {
+  renderMatrixCard(s, gridStartMin, PX_PER_MIN, TOP_OFFSET = 12) {
     const startMin = this.getMinFromTime(s);
     const durMin = parseInt(s.length, 10) || 45;
-    const topPx = (startMin - gridStartMin) * PX_PER_MIN;
+    const topPx = (startMin - gridStartMin) * PX_PER_MIN + TOP_OFFSET;
     const heightPx = Math.max(durMin * PX_PER_MIN - 2, 40);
 
     const isStarred = this.state.isStarred(s.id);
