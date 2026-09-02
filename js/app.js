@@ -381,10 +381,10 @@ class App {
 
     return `
       <div class="matrix-card format-${s.format} ${shortClass}" data-id="${s.id}" style="top: ${topPx}px; height: ${heightPx}px; --card-height: ${heightPx}px;" title="${this.escapeHtml(s.title)} (${s.timeFormatted}, ${s.length} min)">
-        <div class="matrix-card-header">
+        <div class="session-title">${this.escapeHtml(s.title)}</div>
+        <div class="matrix-card-footer">
           <button class="star-btn ${starClass}" title="Star session">${starSymbol}</button>
         </div>
-        <div class="session-title">${this.escapeHtml(s.title)}</div>
       </div>
     `;
   }

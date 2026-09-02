@@ -701,10 +701,10 @@ main {
   white-space: normal !important;
 }
 
-.matrix-card-header {
-  position: absolute;
-  top: 1px;
-  right: 1px;
+.matrix-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
   z-index: 2;
 }
 
@@ -718,8 +718,6 @@ main {
 
 .matrix-card.short-card .star-btn {
   font-size: 0.62rem;
-  top: 1px;
-  right: 1px;
   padding: 0 1px;
 }
 
@@ -729,7 +727,7 @@ main {
   line-height: 1.1;
   color: var(--text-main);
   overflow: hidden;
-  padding-right: 12px;
+  padding-right: 0;
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
@@ -739,7 +737,7 @@ main {
 .matrix-card.short-card .session-title {
   font-size: 0.6rem;
   line-height: 1.05;
-  padding-right: 10px;
+  padding-right: 0;
   -webkit-line-clamp: 2;
 }
 
@@ -763,10 +761,8 @@ main {
     font-size: 0.8rem;
   }
 
-  /* Hide star buttons on schedule & matrix cards on mobile */
-  .session-card .star-btn,
-  .matrix-card .star-btn,
-  .matrix-card-header {
+  /* Hide star buttons on schedule list cards on mobile */
+  .session-card .star-btn {
     display: none !important;
   }
 
