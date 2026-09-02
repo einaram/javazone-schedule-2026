@@ -287,7 +287,7 @@ class App {
       'Workshop A', 'Workshop B', 'Workshop C', 'Workshop D', 'Workshop E'
     ];
 
-    const PX_PER_MIN = 2.2;
+    const PX_PER_MIN = 3.2;
     let html = '';
 
     sortedDays.forEach((dayKey) => {
@@ -318,7 +318,7 @@ class App {
       }
 
       const startHour = Math.floor(minMin / 60);
-      const endHour = Math.ceil(maxMin / 60);
+      const endHour = Math.ceil(maxMin / 60) + 1;
       const gridStartMin = startHour * 60;
       const gridEndMin = endHour * 60;
       const totalMins = gridEndMin - gridStartMin;
@@ -371,12 +371,12 @@ class App {
     const startMin = this.getMinFromTime(s);
     const durMin = parseInt(s.length, 10) || 45;
     const topPx = (startMin - gridStartMin) * PX_PER_MIN;
-    const heightPx = Math.max(durMin * PX_PER_MIN - 2, 22);
+    const heightPx = Math.max(durMin * PX_PER_MIN - 2, 40);
 
     const isStarred = this.state.isStarred(s.id);
     const starClass = isStarred ? 'starred' : '';
     const starSymbol = isStarred ? '★' : '☆';
-    const isShort = durMin <= 20 || heightPx < 36;
+    const isShort = durMin <= 20 || heightPx < 50;
     const shortClass = isShort ? 'short-card' : '';
 
     return `
