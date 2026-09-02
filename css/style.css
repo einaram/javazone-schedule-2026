@@ -34,9 +34,6 @@ header {
   background-color: #080c14;
   border-bottom: 1px solid var(--card-border);
   padding: 1rem 2rem;
-  position: sticky;
-  top: 0;
-  z-index: 100;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
@@ -580,6 +577,7 @@ main {
 
 .matrix-wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 12px;
@@ -589,7 +587,8 @@ main {
 .matrix-grid {
   display: grid;
   position: relative;
-  min-width: 100%;
+  min-width: max-content;
+  width: 100%;
 }
 
 .matrix-header-cell {
@@ -743,47 +742,68 @@ main {
   -webkit-line-clamp: 2;
 }
 
-/* Small Screen Responsiveness for Matrix View */
+/* Small Screen Responsiveness for Matrix & Mobile View */
 @media (max-width: 768px) {
+  header {
+    padding: 0.75rem 1rem;
+  }
+
+  .header-container {
+    gap: 0.75rem;
+  }
+
+  .nav-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .tab-btn, .share-btn {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.8rem;
+  }
+
+  /* Hide star buttons on schedule & matrix cards on mobile */
+  .session-card .star-btn,
+  .matrix-card .star-btn,
+  .matrix-card-header {
+    display: none !important;
+  }
+
   .matrix-hide-small {
     display: none !important;
   }
 
   .matrix-header-cell {
-    font-size: 0.7rem;
-    padding: 0.4rem 0.1rem;
+    font-size: 0.78rem;
+    padding: 0.5rem 0.2rem;
   }
 
   .matrix-card {
-    padding: 0.15rem 0.2rem;
-    border-left-width: 2px;
+    padding: 0.2rem 0.25rem;
+    border-left-width: 3px;
   }
 
   .matrix-card.short-card {
-    padding: 1px 1px;
+    padding: 1px 2px;
   }
 
   .matrix-card .session-title {
-    font-size: 0.62rem;
-    line-height: 1.05;
+    font-size: 0.7rem;
+    line-height: 1.1;
     font-weight: 600;
-    padding-right: 9px;
-    -webkit-line-clamp: 3;
+    padding-right: 2px;
+    -webkit-line-clamp: 4;
   }
 
   .matrix-card.short-card .session-title {
-    font-size: 0.55rem;
-    line-height: 1.0;
-    padding-right: 8px;
+    font-size: 0.62rem;
+    line-height: 1.05;
+    padding-right: 2px;
     -webkit-line-clamp: 2;
   }
 
-  .matrix-card .star-btn {
-    font-size: 0.65rem;
-  }
-
   .time-marker {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
   }
 }
 

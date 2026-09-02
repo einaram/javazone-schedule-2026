@@ -341,7 +341,7 @@ class App {
         <div class="matrix-day-section">
           <h2 class="matrix-day-title">${dayNames[dayKey] || dayKey}</h2>
           <div class="matrix-wrapper">
-            <div class="matrix-grid" style="grid-template-columns: 48px repeat(${dayRooms.length}, minmax(0, 1fr));">
+            <div class="matrix-grid" style="grid-template-columns: 50px repeat(${dayRooms.length}, minmax(130px, 1fr));">
               <div class="matrix-header-cell time-header">Time</div>
               ${dayRooms.map((r) => `<div class="matrix-header-cell room-header" title="${this.escapeHtml(r)}">${this.escapeHtml(r)}</div>`).join('')}
 
