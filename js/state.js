@@ -11,8 +11,12 @@ export function encodeStarredToUrl(starredIds) {
   if (!starredIds || starredIds.length === 0) return '';
   try {
     const jsonStr = JSON.stringify(starredIds);
-    // Base64 encode and make URL safe
-    const base64 = btoa(unescape(encodeURIComponent(jsonStr)))
+    const bytes = new TextEncoder().encode(jsonStr);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary)
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
@@ -29,17 +33,40 @@ export function encodeStarredToUrl(starredIds) {
 export function decodeStarredFromUrl(urlParam) {
   if (!urlParam) return [];
   try {
-    let base64 = urlParam.replace(/-/g, '+').replace(/_/g, '/');
-    while (base64.length % 4) {
+    const raw = decodeURIComponent(urlParam).trim();
+
+    // 1. Try parsing directly as JSON
+    if (raw.startsWith('[') && raw.endsWith(']')) {
+      try {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) return arr;
+      } catch (e) {}
+    }
+
+    // 2. Clean for Base64 (remove %20, spaces, newlines, tabs)
+    let clean = raw.replace(/%20/g, '').replace(/\s+/g, '');
+    let base64 = clean.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4 !== 0) {
       base64 += '=';
     }
-    const jsonStr = decodeURIComponent(escape(atob(base64)));
+
+    const binary = atob(base64);
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    const jsonStr = new TextDecoder().decode(bytes);
+
     const arr = JSON.parse(jsonStr);
-    return Array.isArray(arr) ? arr : [];
+    if (Array.isArray(arr)) return arr;
   } catch (e) {
+    // 3. Fallback: try comma-separated IDs
+    try {
+      const parts = urlParam.split(',').map((s) => decodeURIComponent(s).trim()).filter(Boolean);
+      if (parts.length > 0 && parts.every((p) => p.length > 5)) {
+        return parts;
+      }
+    } catch (err) {}
     console.error('Error decoding starred state from URL:', e);
-    return [];
   }
+  return [];
 }
 
 export class StateManager {
