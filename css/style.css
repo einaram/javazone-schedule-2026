@@ -464,6 +464,228 @@ main {
   color: var(--text-main);
 }
 
+/* Room Matrix View */
+.matrix-day-section {
+  margin-bottom: 3rem;
+}
+
+.matrix-day-title {
+  margin: 1.5rem 0 1rem 0;
+  color: var(--accent-color);
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 0.5rem;
+}
+
+.matrix-wrapper {
+  overflow-x: auto;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.matrix-grid {
+  display: grid;
+  position: relative;
+  min-width: 100%;
+}
+
+.matrix-header-cell {
+  background: #080c14;
+  padding: 0.6rem 0.4rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-align: center;
+  border-bottom: 2px solid var(--card-border);
+  border-right: 1px solid var(--card-border);
+  color: var(--accent-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.matrix-header-cell:last-child {
+  border-right: none;
+}
+
+.matrix-time-col {
+  position: relative;
+  border-right: 1px solid var(--card-border);
+  background: rgba(11, 15, 25, 0.6);
+}
+
+.time-marker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.time-grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.matrix-room-col {
+  position: relative;
+  border-right: 1px solid var(--card-border);
+  background: rgba(11, 15, 25, 0.2);
+}
+
+.matrix-room-col:last-child {
+  border-right: none;
+}
+
+.matrix-card {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  background: #172036;
+  border: 1px solid var(--card-border);
+  border-left: 3px solid var(--accent-color);
+  border-radius: 5px;
+  padding: 0.2rem 0.35rem;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  z-index: 1;
+}
+
+.matrix-card.short-card {
+  padding: 1px 2px;
+}
+
+.matrix-card.format-presentation {
+  border-left-color: var(--tag-presentation);
+}
+
+.matrix-card.format-workshop {
+  border-left-color: var(--tag-workshop);
+}
+
+.matrix-card.format-lightning-talk {
+  border-left-color: var(--tag-lightning);
+}
+
+/* Hover expansion so full long title is never clipped or hidden */
+.matrix-card:hover {
+  height: auto !important;
+  min-height: var(--card-height, 22px);
+  z-index: 100 !important;
+  border-color: var(--accent-color);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.95);
+  background: #1e2a47;
+  overflow: visible !important;
+}
+
+.matrix-card:hover .session-title {
+  -webkit-line-clamp: unset !important;
+  display: block !important;
+  overflow: visible !important;
+  white-space: normal !important;
+}
+
+.matrix-card-header {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  z-index: 2;
+}
+
+.matrix-card .star-btn {
+  font-size: 0.8rem;
+  padding: 0 2px;
+  line-height: 1;
+  background: rgba(11, 15, 25, 0.7);
+  border-radius: 3px;
+}
+
+.matrix-card.short-card .star-btn {
+  font-size: 0.62rem;
+  top: 1px;
+  right: 1px;
+  padding: 0 1px;
+}
+
+.matrix-card .session-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text-main);
+  overflow: hidden;
+  padding-right: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.matrix-card.short-card .session-title {
+  font-size: 0.6rem;
+  line-height: 1.05;
+  padding-right: 10px;
+  -webkit-line-clamp: 2;
+}
+
+/* Small Screen Responsiveness for Matrix View */
+@media (max-width: 768px) {
+  .matrix-hide-small {
+    display: none !important;
+  }
+
+  .matrix-header-cell {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.1rem;
+  }
+
+  .matrix-card {
+    padding: 0.15rem 0.2rem;
+    border-left-width: 2px;
+  }
+
+  .matrix-card.short-card {
+    padding: 1px 1px;
+  }
+
+  .matrix-card .session-title {
+    font-size: 0.62rem;
+    line-height: 1.05;
+    font-weight: 600;
+    padding-right: 9px;
+    -webkit-line-clamp: 3;
+  }
+
+  .matrix-card.short-card .session-title {
+    font-size: 0.55rem;
+    line-height: 1.0;
+    padding-right: 8px;
+    -webkit-line-clamp: 2;
+  }
+
+  .matrix-card .star-btn {
+    font-size: 0.65rem;
+  }
+
+  .time-marker {
+    font-size: 0.65rem;
+  }
+}
+
 footer {
   text-align: center;
   padding: 2rem;

@@ -11,7 +11,8 @@ class App {
       day: 'all',
       format: 'all',
       lang: 'all',
-      hideFinished: false
+      hideFinished: false,
+      view: 'grid'
     };
 
     this.initDOM();
@@ -25,6 +26,7 @@ class App {
     this.starCount = document.getElementById('star-count');
     this.shareBtn = document.getElementById('share-btn');
     this.searchInput = document.getElementById('search-input');
+    this.viewChips = document.getElementById('view-chips');
     this.dayChips = document.getElementById('day-chips');
     this.formatChips = document.getElementById('format-chips');
     this.langChips = document.getElementById('lang-chips');
@@ -51,6 +53,7 @@ class App {
     });
 
     // Chip filter handlers
+    if (this.viewChips) this.bindChips(this.viewChips, 'view');
     this.bindChips(this.dayChips, 'day');
     this.bindChips(this.formatChips, 'format');
     this.bindChips(this.langChips, 'lang');
@@ -153,6 +156,18 @@ class App {
     });
   }
 
+  getMinFromTime(s) {
+    if (s.startMs) {
+      const d = new Date(s.startMs);
+      return d.getHours() * 60 + d.getMinutes();
+    }
+    if (s.timeFormatted) {
+      const [h, m] = s.timeFormatted.split(':').map(Number);
+      return h * 60 + m;
+    }
+    return 540;
+  }
+
   render() {
     const list = this.getFilteredSessions();
 
@@ -175,6 +190,34 @@ class App {
       return;
     }
 
+    if (this.filters.view === 'matrix') {
+      this.renderMatrix(list);
+    } else {
+      this.renderGrid(list);
+    }
+
+    // Attach card event listeners
+    this.container.querySelectorAll('.session-card, .matrix-card').forEach((card) => {
+      const id = card.dataset.id;
+      const starBtn = card.querySelector('.star-btn');
+
+      if (starBtn) {
+        starBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.state.toggleStar(id);
+          this.updateStarCount();
+          this.render();
+        });
+      }
+
+      card.addEventListener('click', () => {
+        const session = this.sessions.find((s) => s.id === id);
+        if (session) this.openModal(session);
+      });
+    });
+  }
+
+  renderGrid(list) {
     // Group sessions by dateDay then by timeFormatted
     const grouped = {};
     list.forEach((s) => {
@@ -216,24 +259,129 @@ class App {
     });
 
     this.container.innerHTML = html;
+  }
 
-    // Attach card event listeners
-    this.container.querySelectorAll('.session-card').forEach((card) => {
-      const id = card.dataset.id;
-      const starBtn = card.querySelector('.star-btn');
-
-      starBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.state.toggleStar(id);
-        this.updateStarCount();
-        this.render();
-      });
-
-      card.addEventListener('click', () => {
-        const session = this.sessions.find((s) => s.id === id);
-        if (session) this.openModal(session);
-      });
+  renderMatrix(list) {
+    const groupedByDay = {};
+    list.forEach((s) => {
+      const day = s.dateDay || 'Tue';
+      if (!groupedByDay[day]) groupedByDay[day] = [];
+      groupedByDay[day].push(s);
     });
+
+    const dayNames = { Tue: 'Tuesday, Sep 1', Wed: 'Wednesday, Sep 2', Thu: 'Thursday, Sep 3' };
+    const dayOrder = ['Tue', 'Wed', 'Thu'];
+
+    const sortedDays = dayOrder.filter((d) => groupedByDay[d]);
+    Object.keys(groupedByDay).forEach((d) => {
+      if (!sortedDays.includes(d)) sortedDays.push(d);
+    });
+
+    const knownRoomOrder = [
+      'Room I', 'Room II', 'Room III', 'Room IV', 'Room V', 'Room VI', 'Room VII',
+      'Workshop A', 'Workshop B', 'Workshop C', 'Workshop D', 'Workshop E'
+    ];
+
+    const PX_PER_MIN = 2.2;
+    let html = '';
+
+    sortedDays.forEach((dayKey) => {
+      const daySessions = groupedByDay[dayKey];
+      const dayRooms = Array.from(new Set(daySessions.map((s) => s.room))).sort((a, b) => {
+        const ia = knownRoomOrder.indexOf(a);
+        const ib = knownRoomOrder.indexOf(b);
+        if (ia !== -1 && ib !== -1) return ia - ib;
+        if (ia !== -1) return -1;
+        if (ib !== -1) return 1;
+        return a.localeCompare(b);
+      });
+
+      let minMin = 24 * 60;
+      let maxMin = 0;
+
+      daySessions.forEach((s) => {
+        const startMin = this.getMinFromTime(s);
+        const durMin = parseInt(s.length, 10) || 45;
+        const endMin = startMin + durMin;
+        if (startMin < minMin) minMin = startMin;
+        if (endMin > maxMin) maxMin = endMin;
+      });
+
+      if (minMin >= maxMin) {
+        minMin = 540;
+        maxMin = 1080;
+      }
+
+      const startHour = Math.floor(minMin / 60);
+      const endHour = Math.ceil(maxMin / 60);
+      const gridStartMin = startHour * 60;
+      const gridEndMin = endHour * 60;
+      const totalMins = gridEndMin - gridStartMin;
+      const totalHeight = totalMins * PX_PER_MIN;
+
+      let timeMarkersHtml = '';
+      let gridLinesHtml = '';
+
+      for (let hour = startHour; hour <= endHour; hour++) {
+        const mins = hour * 60;
+        const topPx = (mins - gridStartMin) * PX_PER_MIN;
+        const hh = String(hour).padStart(2, '0');
+        const label = `${hh}:00`;
+
+        timeMarkersHtml += `<div class="time-marker" style="top: ${topPx}px;">${label}</div>`;
+        gridLinesHtml += `<div class="time-grid-line" style="top: ${topPx}px;"></div>`;
+      }
+
+      html += `
+        <div class="matrix-day-section">
+          <h2 class="matrix-day-title">${dayNames[dayKey] || dayKey}</h2>
+          <div class="matrix-wrapper">
+            <div class="matrix-grid" style="grid-template-columns: 48px repeat(${dayRooms.length}, minmax(0, 1fr));">
+              <div class="matrix-header-cell time-header">Time</div>
+              ${dayRooms.map((r) => `<div class="matrix-header-cell room-header" title="${this.escapeHtml(r)}">${this.escapeHtml(r)}</div>`).join('')}
+
+              <div class="matrix-time-col" style="height: ${totalHeight}px;">
+                ${timeMarkersHtml}
+              </div>
+
+              ${dayRooms.map((r) => {
+                const roomSessions = daySessions.filter((s) => s.room === r);
+                return `
+                  <div class="matrix-room-col" style="height: ${totalHeight}px;">
+                    ${gridLinesHtml}
+                    ${roomSessions.map((s) => this.renderMatrixCard(s, gridStartMin, PX_PER_MIN)).join('')}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    this.container.innerHTML = html;
+  }
+
+  renderMatrixCard(s, gridStartMin, PX_PER_MIN) {
+    const startMin = this.getMinFromTime(s);
+    const durMin = parseInt(s.length, 10) || 45;
+    const topPx = (startMin - gridStartMin) * PX_PER_MIN;
+    const heightPx = Math.max(durMin * PX_PER_MIN - 2, 22);
+
+    const isStarred = this.state.isStarred(s.id);
+    const starClass = isStarred ? 'starred' : '';
+    const starSymbol = isStarred ? '★' : '☆';
+    const isShort = durMin <= 20 || heightPx < 36;
+    const shortClass = isShort ? 'short-card' : '';
+
+    return `
+      <div class="matrix-card format-${s.format} ${shortClass}" data-id="${s.id}" style="top: ${topPx}px; height: ${heightPx}px; --card-height: ${heightPx}px;" title="${this.escapeHtml(s.title)} (${s.timeFormatted}, ${s.length} min)">
+        <div class="matrix-card-header">
+          <button class="star-btn ${starClass}" title="Star session">${starSymbol}</button>
+        </div>
+        <div class="session-title">${this.escapeHtml(s.title)}</div>
+      </div>
+    `;
   }
 
   renderCard(s) {
