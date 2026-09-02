@@ -145,9 +145,14 @@ class App {
         const q = this.filters.search;
         const matchesTitle = s.title.toLowerCase().includes(q);
         const matchesAbstract = s.abstract.toLowerCase().includes(q);
-        const matchesSpeakers = s.speakers.some((sp) => sp.toLowerCase().includes(q));
+        const matchesAudience = (s.intendedAudience || '').toLowerCase().includes(q);
+        const matchesSpeakers = s.speakers.some((sp) => {
+          const name = typeof sp === 'string' ? sp : sp.name || '';
+          const bio = typeof sp === 'object' && sp ? sp.bio || '' : '';
+          return name.toLowerCase().includes(q) || bio.toLowerCase().includes(q);
+        });
         const matchesRoom = s.room.toLowerCase().includes(q);
-        if (!matchesTitle && !matchesAbstract && !matchesSpeakers && !matchesRoom) {
+        if (!matchesTitle && !matchesAbstract && !matchesAudience && !matchesSpeakers && !matchesRoom) {
           return false;
         }
       }
@@ -407,7 +412,7 @@ class App {
             <span>⏱ ${s.length} min</span>
           </div>
           <div class="session-speakers">
-            ${s.speakers.map((sp) => this.escapeHtml(sp)).join(', ')}
+            ${s.speakers.map((sp) => this.escapeHtml(typeof sp === 'string' ? sp : sp.name)).join(', ')}
           </div>
         </div>
       </div>
@@ -418,8 +423,9 @@ class App {
     const isStarred = this.state.isStarred(s.id);
     const starClass = isStarred ? 'starred' : '';
     const starSymbol = isStarred ? '★ Starred' : '☆ Star';
+    const speakerNames = s.speakers.map((sp) => typeof sp === 'string' ? sp : sp.name).join(', ');
 
-    this.modalBody.innerHTML = `
+    let html = `
       <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
         <span class="badge badge-${s.format}">${s.format}</span>
         <span class="badge badge-lang">${s.language.toUpperCase()}</span>
@@ -427,13 +433,86 @@ class App {
       <div class="modal-title">${this.escapeHtml(s.title)}</div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 1rem;">
         <div>
-          <div style="color: var(--accent-color); font-weight: 600;">${s.speakers.map((sp) => this.escapeHtml(sp)).join(', ')}</div>
+          <div style="color: var(--accent-color); font-weight: 600;">${this.escapeHtml(speakerNames)}</div>
           <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">📍 ${this.escapeHtml(s.room)} • ⏱ ${s.length} mins • ${s.dateDay} ${s.timeFormatted}</div>
         </div>
         <button id="modal-star-btn" class="star-btn ${starClass}" style="font-size: 1rem; border: 1px solid var(--card-border); padding: 0.4rem 0.8rem; border-radius: 6px; background: #0b0f19;">${starSymbol}</button>
       </div>
       <div class="modal-abstract">${this.escapeHtml(s.abstract)}</div>
     `;
+
+    if (s.intendedAudience) {
+      html += `
+        <div class="modal-section">
+          <div class="modal-section-title">🎯 Intended Audience</div>
+          <div class="modal-section-content">${this.escapeHtml(s.intendedAudience)}</div>
+        </div>
+      `;
+    }
+
+    if (s.suggestedKeywords) {
+      const keywords = s.suggestedKeywords.split(',').map((k) => k.trim()).filter(Boolean);
+      if (keywords.length > 0) {
+        html += `
+          <div class="modal-section">
+            <div class="modal-section-title">🏷 Keywords</div>
+            <div class="modal-keywords">
+              ${keywords.map((k) => `<span class="keyword-tag">${this.escapeHtml(k)}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    if (s.speakers && s.speakers.length > 0) {
+      const hasDetails = s.speakers.some((sp) => typeof sp === 'object' && (sp.bio || sp.bluesky || sp.linkedin || sp.twitter || sp.pictureUrl));
+      if (hasDetails) {
+        html += `
+          <div class="modal-section">
+            <div class="modal-section-title">👤 ${s.speakers.length > 1 ? 'Presenters' : 'Presenter'}</div>
+            <div class="modal-speakers-list">
+              ${s.speakers.map((sp) => {
+                const name = typeof sp === 'string' ? sp : sp.name;
+                const bio = typeof sp === 'object' ? sp.bio || '' : '';
+                const bluesky = typeof sp === 'object' ? sp.bluesky || '' : '';
+                const linkedin = typeof sp === 'object' ? sp.linkedin || '' : '';
+                const twitter = typeof sp === 'object' ? sp.twitter || '' : '';
+                const pictureUrl = typeof sp === 'object' ? sp.pictureUrl || '' : '';
+
+                let linksHtml = '';
+                if (bluesky) {
+                  const bskyUrl = bluesky.startsWith('http') ? bluesky : `https://bsky.app/profile/${bluesky.replace(/^@/, '')}`;
+                  linksHtml += `<a href="${this.escapeHtml(bskyUrl)}" target="_blank" rel="noopener" class="speaker-social-link">🦋 ${this.escapeHtml(bluesky)}</a>`;
+                }
+                if (linkedin) {
+                  const liUrl = linkedin.startsWith('http') ? linkedin : `https://www.linkedin.com/in/${linkedin}`;
+                  linksHtml += `<a href="${this.escapeHtml(liUrl)}" target="_blank" rel="noopener" class="speaker-social-link">💼 LinkedIn</a>`;
+                }
+                if (twitter) {
+                  const twUrl = twitter.startsWith('http') ? twitter : `https://twitter.com/${twitter.replace(/^@/, '')}`;
+                  linksHtml += `<a href="${this.escapeHtml(twUrl)}" target="_blank" rel="noopener" class="speaker-social-link">🐦 ${this.escapeHtml(twitter)}</a>`;
+                }
+
+                return `
+                  <div class="speaker-card">
+                    <div class="speaker-card-header">
+                      ${pictureUrl ? `<img src="${this.escapeHtml(pictureUrl)}" class="speaker-avatar" alt="${this.escapeHtml(name)}" />` : ''}
+                      <div>
+                        <div class="speaker-card-name">${this.escapeHtml(name)}</div>
+                        ${linksHtml ? `<div class="speaker-social-links">${linksHtml}</div>` : ''}
+                      </div>
+                    </div>
+                    ${bio ? `<div class="speaker-card-bio">${this.escapeHtml(bio)}</div>` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    this.modalBody.innerHTML = html;
 
     document.getElementById('modal-star-btn').addEventListener('click', () => {
       this.state.toggleStar(s.id);

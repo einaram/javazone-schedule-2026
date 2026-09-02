@@ -1,7 +1,7 @@
 /**
  * Fetch JavaZone sessions from SleepingPill API with fallbacks and browser caching.
  */
-const CACHE_KEY = 'javazone_2026_all_sessions_cache';
+const CACHE_KEY = 'javazone_2026_all_sessions_cache_v2';
 
 export async function fetchSessions() {
   const remoteEndpoints = [
@@ -116,7 +116,25 @@ function normalizeSessions(sessions) {
     }
 
     const speakers = Array.isArray(s.speakers)
-      ? s.speakers.map((sp) => typeof sp === 'string' ? sp : sp.name).filter(Boolean)
+      ? s.speakers
+          .map((sp) => {
+            if (typeof sp === 'string') {
+              return { name: sp.trim(), bio: '', twitter: '', linkedin: '', bluesky: '', pictureUrl: '' };
+            }
+            if (typeof sp === 'object' && sp !== null) {
+              const pictureUrl = sp.pictureUrl || sp.picture || (sp.pictureId ? `https://sleepingpill.javazone.no/public/picture/${sp.pictureId}` : '');
+              return {
+                name: (sp.name || '').trim(),
+                bio: sp.bio || '',
+                twitter: sp.twitter || '',
+                linkedin: sp.linkedin || '',
+                bluesky: sp.bluesky || '',
+                pictureUrl: pictureUrl || ''
+              };
+            }
+            return null;
+          })
+          .filter((sp) => sp && sp.name)
       : [];
 
     return {
