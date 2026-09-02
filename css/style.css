@@ -761,9 +761,18 @@ main {
     font-size: 0.8rem;
   }
 
-  /* Hide star buttons on schedule list cards on mobile */
-  .session-card .star-btn {
-    display: none !important;
+  /* Show star buttons clearly on mobile */
+  .session-card .star-btn,
+  .matrix-card .star-btn {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .matrix-card .star-btn {
+    font-size: 0.85rem !important;
+    padding: 2px 4px !important;
+    line-height: 1 !important;
   }
 
   .matrix-hide-small {
